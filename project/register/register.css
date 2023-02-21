@@ -1,0 +1,101 @@
+@charset "UTF-8";@charset "UTF-8";
+
+body{
+	background: #f5f6f7;
+}
+#container{
+    margin: 0 auto;
+    width: 1200px;
+}
+#logo{
+	width: 100%;
+	height: 100px;
+	
+}
+#box{
+	width: 560px;
+	height: 900px;
+	text-align: center;
+	margin: 0;
+	display: inline-block;
+	position:absolute; 
+	top:50%; 
+	left:50%; 
+	margin:-450px 0 0 -280px;
+	
+}
+#logo1{
+	font-size: 45px;
+	font-style: italic;
+}
+#frmtable{
+	margin: 0;
+	text-align: center;
+	width: 560px;
+}
+#register{
+	text-align: center;
+	margin:0;
+}
+table td{
+	padding-bottom: 20px;
+}
+.tdinput{
+	width: 300px;
+	height: 30px;
+}
+#tdname{
+	width: 260px;
+	font-size: 14px;
+	font-weight: bold;
+}
+#tdsubmit{
+	width: 200px;
+	height: 50px;
+	font-size: 15px;
+	background-color: #D8D8D8;
+	border: none;
+}
+#tdreset{
+	width: 200px;
+	height: 50px;
+	font-size: 15px;
+	background-color: #8e8e8e;
+	border: none;
+	color: white;
+}
+#tdsubmit:hover, #tdreset:hover{
+	cursor: pointer;
+}
+.tdtel{
+	width: 75px;
+	height: 30px;
+}
+#telselect{
+	width: 77px;
+	height: 36px;
+	font-size: 14px;
+	text-align: center;
+}
+.tdzipNo{
+	width: 150px;
+	height: 30px;
+	margin-right: 30px;
+	float: left;
+}
+#addrfind{
+	height: 35px;
+	width: 80px;
+	background-color: #D8D8D8;
+	border: none;
+	border-radius: 2px;
+}
+#addrtd{
+	padding-bottom: 5px;
+}
+footer{
+    width: 100%;
+    height: 100px;
+    background-color: grey;
+    display: block;
+}
