@@ -13,7 +13,7 @@
 		
 		String url = "jdbc:mysql://localhost:3306/reservation?serverTimezone=UTC&allowMultiQueries=true";
 		String user = "root";
-		String password = "12345";
+		String password = "your_password";
 		
 		Class.forName("com.mysql.jdbc.Driver");
 		conn = DriverManager.getConnection(url, user, password);
