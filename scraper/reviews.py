@@ -111,15 +111,17 @@ def main():
     with sync_playwright() as p, open(f"{a.out}_reviews.csv", "w", encoding="utf-8-sig", newline="") as fr, \
             open(f"{a.out}_shops.csv", "w", encoding="utf-8-sig", newline="") as fs:
         b = p.chromium.launch(executable_path=a.chrome, args=["--no-sandbox"])
-        pg = b.new_page(locale="ko-KR")
         wr = csv.writer(fr); wr.writerow(["관리번호", "사업장명", "place_id", "nickname", "date", "visit", "content"])
         ws = csv.writer(fs); ws.writerow(["관리번호", "사업장명", "도로명주소", "place_id", "네이버주소", "match_level", "리뷰수"])
         for i, r in enumerate(rows, 1):
+            ctx = b.new_context(locale="ko-KR")  # 가게마다 새 컨텍스트: 한 세션으로 ~50회 넘게 검색하면 결과가 비는 현상 회피
+            pg = ctx.new_page()
             try:
                 hit = find_place(pg, r)
                 revs = read_reviews(pg, hit[0], a.max_reviews) if hit and hit[3] == "확정" else []  # 후보는 리뷰 미수집
             except Exception as e:  # 한 곳 실패가 전체를 멈추지 않게
                 print("  오류:", r["사업장명"], e); hit, revs = None, []
+            ctx.close()
             for v in revs:
                 wr.writerow([r["관리번호"], r["사업장명"], hit[0], v["nickname"], v["date"], v["visit"], v["content"]])
             ws.writerow([r["관리번호"], r["사업장명"], r["도로명주소"], hit[0] if hit else "", hit[2] if hit else "", hit[3] if hit else "", len(revs)])
