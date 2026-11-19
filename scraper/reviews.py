@@ -52,13 +52,15 @@ def find_place(pg, row):
             pg.wait_for_selector("iframe#searchIframe", timeout=15000)
         except Exception:
             continue
-        # 검색 결과(빈 결과 포함)가 로드됐다는 표시인 placeList가 나올 때까지 최대 ~15초 대기
+        # 결과 항목이 나올 때까지 최대 ~15초 대기(빈 결과와 로딩 중을 구분할 수 없어 끝까지 기다림)
+        items = []
         for _ in range(10):
             pg.wait_for_timeout(1500)
-            html = pg.frame(name="searchIframe").content()
-            if "placeList(" in html:
+            f = pg.frame(name="searchIframe")  # 로딩 중 iframe이 교체되면 None
+            items = ITEM.findall(f.content()) if f else []
+            if items:
                 break
-        for pid, n, addr, common in ITEM.findall(html):
+        for pid, n, addr, common in items:
             addr, n = unesc(addr), unesc(n)
             if re.search(re.escape(key) + r"(?!\d)", addr):
                 return pid, n, addr, "확정"
