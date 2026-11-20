@@ -2,6 +2,7 @@
 
 사용: python reviews.py 파일.csv --region 종로구 --limit 5 --max-reviews 30
 의존: pip install playwright && playwright install chromium
+내 PC: python reviews.py 파일.csv --region 강남구 --type 일반미용업 --headed --resume --out gangnam
 """
 import argparse, csv, json, os, random, re, time
 from playwright.sync_api import sync_playwright
@@ -106,6 +107,7 @@ def main():
     ap.add_argument("--out", default="out")
     ap.add_argument("--shard", default="0/1", help="i/n: 대상을 n등분해 i번째만 처리(병렬 실행용, 프로세스마다 --out을 다르게)")
     ap.add_argument("--resume", action="store_true", help="--out 파일에 이미 기록된 관리번호는 건너뛰고 이어서 기록")
+    ap.add_argument("--headed", action="store_true", help="브라우저 창을 띄움(내 PC 실행용)")
     ap.add_argument("--chrome", default=None, help="chrome 실행 파일 경로(생략하면 playwright 기본 브라우저)")
     a = ap.parse_args()
 
@@ -126,7 +128,7 @@ def main():
 
     with sync_playwright() as p, open(f"{a.out}_reviews.csv", mode, encoding="utf-8-sig", newline="") as fr, \
             open(sp, mode, encoding="utf-8-sig", newline="") as fs:
-        b = p.chromium.launch(executable_path=a.chrome, args=["--no-sandbox"])
+        b = p.chromium.launch(executable_path=a.chrome, headless=not a.headed, args=["--no-sandbox"])
         wr, ws = csv.writer(fr), csv.writer(fs)
         if not resume:
             wr.writerow(["관리번호", "사업장명", "place_id", "nickname", "date", "visit", "content"])
