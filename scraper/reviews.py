@@ -97,6 +97,12 @@ def read_reviews(pg, pid, max_reviews):
     return out
 
 
+def load_rows(path, region, type_=""):
+    return [r for r in csv.DictReader(open(path, encoding="cp949", newline=""))
+            if r["영업상태명"] == "영업/정상" and region in r["도로명주소"] and (not type_ or r["업태구분명"] == type_)
+            and "피부미용업" not in r["위생업태명"] and not EXCL_NAME.search(r["사업장명"])]
+
+
 def main():
     ap = argparse.ArgumentParser()
     ap.add_argument("csv")
@@ -111,9 +117,7 @@ def main():
     ap.add_argument("--chrome", default=None, help="chrome 실행 파일 경로(생략하면 playwright 기본 브라우저)")
     a = ap.parse_args()
 
-    rows = [r for r in csv.DictReader(open(a.csv, encoding="cp949", newline=""))
-            if r["영업상태명"] == "영업/정상" and a.region in r["도로명주소"] and (not a.type or r["업태구분명"] == a.type)
-            and "피부미용업" not in r["위생업태명"] and not EXCL_NAME.search(r["사업장명"])]
+    rows = load_rows(a.csv, a.region, a.type)
     if a.limit:
         rows = rows[: a.limit]
     si, sn = map(int, a.shard.split("/"))
