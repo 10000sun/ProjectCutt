@@ -3,7 +3,7 @@
 사용: python reviews.py 파일.csv --region 종로구 --limit 5 --max-reviews 30
 의존: pip install playwright && playwright install chromium
 """
-import argparse, csv, json, random, re, time
+import argparse, csv, json, os, random, re, time
 from playwright.sync_api import sync_playwright
 
 ITEM = re.compile(r'"__typename":"PlaceListBusinessesItem","id":"(\d+)","name":"(.*?)","normalizedName":".*?","category":"(.*?)",.*?"fullAddress":"(.*?)","commonAddress":"(.*?)"')
@@ -104,6 +104,8 @@ def main():
     ap.add_argument("--limit", type=int, default=0)
     ap.add_argument("--max-reviews", type=int, default=30)
     ap.add_argument("--out", default="out")
+    ap.add_argument("--shard", default="0/1", help="i/n: 대상을 n등분해 i번째만 처리(병렬 실행용, 프로세스마다 --out을 다르게)")
+    ap.add_argument("--resume", action="store_true", help="--out 파일에 이미 기록된 관리번호는 건너뛰고 이어서 기록")
     ap.add_argument("--chrome", default=None, help="chrome 실행 파일 경로(생략하면 playwright 기본 브라우저)")
     a = ap.parse_args()
 
@@ -112,13 +114,23 @@ def main():
             and "피부미용업" not in r["위생업태명"] and not EXCL_NAME.search(r["사업장명"])]
     if a.limit:
         rows = rows[: a.limit]
+    si, sn = map(int, a.shard.split("/"))
+    rows = rows[si::sn]
+    sp = f"{a.out}_shops.csv"
+    resume = a.resume and os.path.exists(sp)
+    if resume:
+        done = {r["관리번호"] for r in csv.DictReader(open(sp, encoding="utf-8-sig", newline=""))}
+        rows = [r for r in rows if r["관리번호"] not in done]
+    mode = "a" if resume else "w"
     print(f"대상 {len(rows)}곳")
 
-    with sync_playwright() as p, open(f"{a.out}_reviews.csv", "w", encoding="utf-8-sig", newline="") as fr, \
-            open(f"{a.out}_shops.csv", "w", encoding="utf-8-sig", newline="") as fs:
+    with sync_playwright() as p, open(f"{a.out}_reviews.csv", mode, encoding="utf-8-sig", newline="") as fr, \
+            open(sp, mode, encoding="utf-8-sig", newline="") as fs:
         b = p.chromium.launch(executable_path=a.chrome, args=["--no-sandbox"])
-        wr = csv.writer(fr); wr.writerow(["관리번호", "사업장명", "place_id", "nickname", "date", "visit", "content"])
-        ws = csv.writer(fs); ws.writerow(["관리번호", "사업장명", "도로명주소", "place_id", "네이버주소", "match_level", "naver_category", "리뷰수"])
+        wr, ws = csv.writer(fr), csv.writer(fs)
+        if not resume:
+            wr.writerow(["관리번호", "사업장명", "place_id", "nickname", "date", "visit", "content"])
+            ws.writerow(["관리번호", "사업장명", "도로명주소", "place_id", "네이버주소", "match_level", "naver_category", "리뷰수"])
         for i, r in enumerate(rows, 1):
             ctx = b.new_context(locale="ko-KR")  # 가게마다 새 컨텍스트: 한 세션으로 ~50회 넘게 검색하면 결과가 비는 현상 회피
             pg = ctx.new_page()
